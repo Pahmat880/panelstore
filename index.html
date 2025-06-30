@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Hosting Store - Next Gen</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&display=swap'); /* For H1 */
+
+        :root {
+            --bg-color: #0d1117; /* Deep dark blue-black */
+            --container-bg: #161b22; /* Slightly lighter container */
+            --border-color: #30363d; /* Dark border */
+            --text-color: #c9d1d9; /* Light off-white text */
+            --primary-accent: #58a6ff; /* Cyan/Light Blue for primary elements */
+            --secondary-accent: #a464f4; /* Purple for secondary accents */
+            --success-color: #3fb950; /* Green for success */
+            --error-color: #f85149; /* Red for errors */
+            --input-bg: #11141a; /* Even darker for inputs */
+            --placeholder-color: #8b949e;
+            --shadow-color: rgba(0, 0, 0, 0.7);
+            --gradient-1: linear-gradient(90deg, #61dafb 0%, #a464f4 100%); /* Adjusted gradient */
+            --gradient-2: linear-gradient(90deg, #a464f4 0%, #61dafb 100%); /* Adjusted gradient */
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden; /* Hide overflow from particle effect or similar */
+            position: relative;
+        }
+
+        /* --- Particle / Background Effect --- */
+        .background-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+        .particle {
+            position: absolute;
+            background: var(--primary-accent);
+            opacity: 0.2;
+            border-radius: 50%;
+            animation: moveParticle 15s infinite ease-in-out;
+        }
+        .particle:nth-child(2) { background: var(--secondary-accent); animation-duration: 20s; left: 30%; top: 60%; width: 80px; height: 80px; animation-delay: 2s; }
+        .particle:nth-child(3) { animation-duration: 18s; left: 70%; top: 20%; width: 50px; height: 50px; animation-delay: 0s; }
+        .particle:nth-child(4) { animation-duration: 25s; left: 10%; top: 10%; width: 100px; height: 100px; animation-delay: 5s; }
+        .particle:nth-child(5) { animation-duration: 22s; left: 5%; top: 40%; width: 55px; height: 55px; animation-delay: 8s; }
+        @keyframes moveParticle {
+            0% { transform: translate(0, 0) scale(1); opacity: 0.2; }
+            25% { transform: translate(20vw, 30vh) scale(1.2); opacity: 0.3; }
+            50% { transform: translate(50vw, -10vh) scale(0.8); opacity: 0.1; }
+            75% { transform: translate(80vw, 40vh) scale(1.1); opacity: 0.25; }
+            100% { transform: translate(0, 0) scale(1); opacity: 0.2; }
+        }
+        /* --- End Particle Effect --- */
+
+
+        .container {
+            background-color: var(--container-bg);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 15px 40px var(--shadow-color);
+            border: 1px solid var(--border-color);
+            width: 100%;
+            max-width: 900px; /* Wider for store layout */
+            min-height: 500px; /* Ensure some height */
+            box-sizing: border-box;
+            position: relative;
+            z-index: 10;
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+            animation: containerEntry 0.6s ease-out forwards 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center content horizontally */
+        }
+        @keyframes containerEntry {
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif; /* Futuristic font */
+            text-align: center;
+            color: var(--primary-accent);
+            margin-bottom: 35px;
+            font-size: 2.5em;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-shadow: 0 0 10px rgba(97, 218, 251, 0.4);
+        }
+        
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--secondary-accent);
+            font-size: 1.8em;
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 0 0 8px rgba(164, 100, 244, 0.3);
+        }
+
+        /* --- Store Layouts --- */
+        .store-section {
+            width: 100%;
+            max-width: 800px; /* Max width for inner content */
+            display: none; /* Controlled by JS */
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0;
+            animation: sectionFadeIn 0.5s ease-out forwards;
+        }
+        @keyframes sectionFadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .store-section.active {
+            display: flex;
+        }
+
+        .package-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Responsive grid for packages */
+            gap: 25px;
+            width: 100%;
+            margin-bottom: 40px;
+        }
+
+        .package-card {
+            background-color: var(--input-bg); /* Darker card background */
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .package-card::before { /* Subtle accent border on top */
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: var(--gradient-1);
+            transition: all 0.2s ease;
+        }
+        .package-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            border-color: var(--primary-accent);
+        }
+        .package-card.selected {
+            border-color: var(--primary-accent);
+            box-shadow: 0 0 0 3px var(--primary-accent), 0 8px 20px rgba(0,0,0,0.4);
+            transform: scale(1.02);
+            background-color: #1a202b; /* Slightly darker when selected */
+        }
+
+        .package-name {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: var(--primary-accent);
+            margin-bottom: 10px;
+        }
+        .package-price {
+            font-size: 2em;
+            font-weight: 700;
+            color: var(--text-color);
+            margin-bottom: 15px;
+            position: relative;
+            padding-bottom: 10px;
+        }
+        .package-price::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 2px;
+            background: var(--secondary-accent);
+            border-radius: 1px;
+        }
+        .package-features {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 20px 0;
+            text-align: left;
+            font-size: 0.9em;
+            color: var(--placeholder-color);
+        }
+        .package-features li {
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+        }
+        .package-features li i {
+            margin-right: 8px;
+            color: var(--success-color);
+        }
+        .package-select-btn {
+            background-image: var(--gradient-1);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            text-transform: uppercase;
+        }
+        .package-select-btn:hover {
+            background-image: var(--gradient-2);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+        }
+        /* --- End Store Layouts --- */
+
+
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            color: var(--text-color);
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        /* --- Input Field Style --- */
+        .input-glow-border {
+            width: 100%;
+            padding: 14px 18px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            font-size: 1em;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .input-glow-border::placeholder {
+            color: var(--placeholder-color);
+        }
+
+        .input-glow-border:focus {
+            border-color: var(--primary-accent);
+            box-shadow: 0 0 0 3px rgba(97, 218, 251, 0.3);
+            outline: none;
+        }
+
+        select.input-glow-border {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23e0e6f0%22%20d%3D%22M287%2069.9a14.2%2014.2%200%200%200-20.2%200L146.2%20190.4%2025.6%2069.9a14.2%2014.2%200%200%00-20.2%2020.2l130.6%20130.6a14.2%2014.2%200%200%0020.2%200L287%2090.1a14.2%2014.2%200%200%000-20.2z%22%2F%3E%3C%2Fsvg%3E');
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 12px;
+            padding-right: 35px;
+        }
+        /* --- End Input Field Style --- */
+
+        /* --- Button Style --- */
+        .cyber-button {
+            width: 100%;
+            padding: 16px;
+            background-image: var(--gradient-1); /* Initial gradient */
+            color: var(--bg-color);
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 25px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .cyber-button:hover {
+            background-image: var(--gradient-2); /* Reverse gradient on hover */
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .cyber-button:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .cyber-button::before { /* Animated border effect */
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            border: 2px solid transparent;
+            border-image: var(--gradient-1) 1;
+            border-image-slice: 1;
+            z-index: 1;
+            animation: cyberBorder 2s linear infinite;
+        }
+
+        @keyframes cyberBorder {
+            0% { border-image: var(--gradient-1) 1; }
+            50% { border-image: var(--gradient-2) 1; }
+            100% { border-image: var(--gradient-1) 1; }
+        }
+
+        .cyber-button:disabled {
+            background-image: linear-gradient(90deg, #30363d 0%, #3d444e 100%);
+            color: #8b949e;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .cyber-button:disabled::before {
+            animation: none;
+            border-image: none;
+            border-color: #30363d;
+        }
+        /* --- End Button Style --- */
+
+        /* --- Loader/Spinner Style --- */
+        .loader-dots {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 10px;
+            width: 30px; /* Space for dots */
+            height: 18px; /* Height of dots */
+            display: none; /* Hidden by default */
+        }
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: white;
+            margin: 0 3px;
+            animation: bounce 0.6s infinite alternate;
+        }
+        .dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        @keyframes bounce {
+            to { transform: translateY(-5px); }
+        }
+        /* --- End Loader Style --- */
+
+        /* --- Message/Result Display --- */
+        #responseMessage {
+            margin-top: 30px;
+            padding: 25px;
+            border-radius: 12px;
+            background-color: var(--container-bg);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 20px var(--shadow-color);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: messageEntry 0.5s ease-out forwards 0.2s;
+        }
+        @keyframes messageEntry {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #responseMessage.success {
+            border-color: var(--success-color);
+            box-shadow: 0 8px 20px rgba(63, 185, 80, 0.2);
+        }
+        #responseMessage.error {
+            border-color: var(--error-color);
+            box-shadow: 0 8px 20px rgba(248, 81, 73, 0.2);
+        }
+
+        .result-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5em;
+            font-weight: 700;
+            color: var(--success-color);
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed rgba(255,255,255,0.1);
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px dashed rgba(255,255,255,0.05);
+        }
+        .result-row:last-of-type {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .result-row span:first-child {
+            font-weight: 500;
+            color: var(--placeholder-color);
+            min-width: 90px;
+            padding-right: 10px;
+        }
+        .result-row span:last-child {
+            flex-grow: 1;
+            text-align: right;
+            color: var(--text-color);
+            word-break: break-all;
+            font-weight: 600;
+        }
+        .result-row a {
+            color: var(--primary-accent) !important;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+        .result-row a:hover {
+            color: var(--secondary-accent) !important;
+            text-decoration: underline;
+        }
+
+        .result-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .result-actions button {
+            flex: 1 1 calc(50% - 10px);
+            max-width: calc(50% - 5px);
+            padding: 10px 12px;
+            font-size: 0.8em;
+            margin-top: 0;
+            box-shadow: none;
+            background-image: linear-gradient(90deg, #3a424e 0%, #444c56 100%);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+        .result-actions button:hover {
+            background-image: linear-gradient(90deg, #444c56 0%, #3a424e 100%);
+            transform: translateY(-1px);
+        }
+        .result-actions button.login-panel-button {
+            background-image: var(--gradient-1);
+            color: var(--bg-color);
+            border-color: transparent;
+        }
+        .result-actions button.login-panel-button:hover {
+            background-image: var(--gradient-2);
+        }
+
+        .copy-all-button {
+            width: 100%;
+            margin-top: 20px;
+            background-image: var(--gradient-1);
+            color: var(--bg-color);
+            font-size: 0.95em;
+            padding: 14px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .copy-all-button:hover {
+            background-image: var(--gradient-2);
+            transform: translateY(-2px);
+        }
+
+        .contact-message {
+            font-size: 0.8em;
+            color: var(--placeholder-color);
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+        .contact-message a {
+            color: var(--primary-accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .contact-message a:hover {
+            text-decoration: underline;
+        }
+        /* --- End Message/Result Display --- */
+
+        /* --- Toast Notification --- */
+        #toast-notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast-notification {
+            background-color: var(--container-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-color);
+            animation: slideInRight 0.4s ease-out forwards, fadeOut 0.5s ease-in forwards 2.5s;
+            transform: translateX(100%);
+            opacity: 0;
+            min-width: 250px;
+            max-width: 350px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .toast-notification.success { border-left: 4px solid var(--success-color); }
+        .toast-notification.error { border-left: 4px solid var(--error-color); }
+        .toast-notification.info { border-left: 4px solid var(--primary-accent); }
+
+        .toast-notification .icon { font-size: 1.4em; line-height: 1; }
+        .toast-notification.success .icon { color: var(--success-color); }
+        .toast-notification.error .icon { color: var(--error-color); }
+        .toast-notification.info .icon { color: var(--primary-accent); }
+        .toast-notification .message { flex-grow: 1; }
+        
+        .toast-notification .close-btn {
+            background: none;
+            border: none;
+            color: var(--placeholder-color);
+            font-size: 1.2em;
+            cursor: pointer;
+            padding: 0 5px;
+            transition: color 0.2s ease;
+        }
+        .toast-notification .close-btn:hover { color: var(--text-color); }
+
+        @keyframes slideInRight { to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+        /* --- End Toast Notification --- */
+
+        /* --- Payment Specific Styles --- */
+        .payment-info {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 30px;
+            width: 100%;
+            box-sizing: border-box;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            text-align: center; /* Center payment details */
+        }
+        .payment-info h3 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--secondary-accent);
+            font-size: 1.3em;
+            margin-top: 0;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .payment-info p {
+            margin-bottom: 10px;
+            color: var(--text-color);
+        }
+        .payment-info a {
+            color: var(--primary-accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .payment-info a:hover {
+            text-decoration: underline;
+        }
+        .payment-qr-code {
+            max-width: 150px; /* Adjust QR code size */
+            height: auto;
+            margin: 20px auto; /* Center QR code */
+            display: block; /* Ensure it behaves as a block */
+            border: 5px solid var(--container-bg); /* Frame around QR code */
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        }
+
+        .payment-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .payment-actions .cyber-button {
+            margin-top: 0; /* Override default button margin */
+        }
+        .payment-actions .back-button {
+            background-image: linear-gradient(90deg, #30363d 0%, #444c56 100%);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+        .payment-actions .back-button:hover {
+            background-image: linear-gradient(90deg, #444c56 0%, #30363d 100%);
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body>
+    <div class="background-particles">
+        <div class="particle" style="width: 60px; height: 60px; left: 10%; top: 10%;"></div>
+        <div class="particle" style="width: 40px; height: 40px; left: 80%; top: 30%;"></div>
+        <div class="particle" style="width: 90px; height: 90px; left: 20%; top: 80%;"></div>
+        <div class="particle" style="width: 70px; height: 70px; left: 60%; top: 5%;"></div>
+        <div class="particle" style="width: 55px; height: 55px; left: 5%; top: 40%;"></div>
+    </div>
+
+    <div class="container">
+        <h1>PANEL STORE</h1>
+
+        <div id="package-selection-section" class="store-section active">
+            <h2 class="section-title">Pilih Paket Hosting Anda</h2>
+            <div class="package-grid">
+                <div class="package-card" data-package="1gb">
+                    <div class="package-name">1 GB</div>
+                    <div class="package-price" data-base-price="5000">Rp 5.000</div>
+                    <ul class="package-features">
+                        <li><i class="fas fa-check-circle"></i> 1024 MB RAM</li>
+                        <li><i class="fas fa-check-circle"></i> 1024 MB Disk</li>
+                        <li><i class="fas fa-check-circle"></i> 100% CPU</li>
+                        <li><i class="fas fa-check-circle"></i> Full Access</li>
+                    </ul>
+                    <button class="package-select-btn" data-package-id="1gb">Pilih Paket</button>
+                </div>
+
+                <div class="package-card" data-package="2gb">
+                    <div class="package-name">2 GB</div>
+                    <div class="package-price" data-base-price="8000">Rp 8.000</div>
+                    <ul class="package-features">
+                        <li><i class="fas fa-check-circle"></i> 2048 MB RAM</li>
+                        <li><i class="fas fa-check-circle"></i> 2048 MB Disk</li>
+                        <li><i class="fas fa-check-circle"></i> 100% CPU</li>
+                        <li><i class="fas fa-check-circle"></i> Full Access</li>
+                    </ul>
+                    <button class="package-select-btn" data-package-id="2gb">Pilih Paket</button>
+                </div>
+
+                <div class="package-card" data-package="3gb">
+                    <div class="package-name">3 GB</div>
+                    <div class="package-price" data-base-price="10000">Rp 10.000</div>
+                    <ul class="package-features">
+                        <li><i class="fas fa-check-circle"></i> 3072 MB RAM</li>
+                        <li><i class="fas fa-check-circle"></i> 3072 MB Disk</li>
+                        <li><i class="fas fa-check-circle"></i> 100% CPU</li>
+                        <li><i class="fas fa-check-circle"></i> Full Access</li>
+                    </ul>
+                    <button class="package-select-btn" data-package-id="3gb">Pilih Paket</button>
+                </div>
+                
+                <div class="package-card" data-package="4gb">
+                    <div class="package-name">4 GB</div>
+                    <div class="package-price" data-base-price="12000">Rp 12.000</div>
+                    <ul class="package-features">
+                        <li><i class="fas fa-check-circle"></i> 4096 MB RAM</li>
+                        <li><i class="fas fa-check-circle"></i> 4096 MB Disk</li>
+                        <li><i class="fas fa-check-circle"></i> 100% CPU</li>
+                        <li><i class="fas fa-check-circle"></i> Full Access</li>
+                    </ul>
+                    <button class="package-select-btn" data-package-id="4gb">Pilih Paket</button>
+                </div>
+
+                <div class="package-card" data-package="5gb">
+                    <div class="package-name">5 GB</div>
+                    <div class="package-price" data-base-price="15000">Rp 15.000</div>
+                    <ul class="package-features">
+                        <li><i class="fas fa-check-circle"></i> 5120 MB RAM</li>
+                        <li><i class="fas fa-check-circle"></i> 5120 MB Disk</li>
+                        <li><i class="fas fa-check-circle"></i> 100% CPU</li>
+                        <li><i class="fas fa-check-circle"></i> Full Access</li>
+                    </ul>
+                    <button class="package-select-btn" data-package-id="5gb">Pilih Paket</button>
+                </div>
+
+                <div class="package-card" data-package="6gb">
+                    <div class="package-name">6 GB</div>
+                    <div class="package-price" data-base-price="18000">Rp 18.000</div>
+                    <ul class="package-features">
+                        <li><i class="fas fa-check-circle"></i> 6144 MB RAM</li>
+                        <li><i class="fas fa-check-circle"></i> 6144 MB Disk</li>
+                        <li><i class="fas fa-check-circle"></i> 100% CPU</li>
+                        <li><i class="fas fa-check-circle"></i> Full Access</li>
+                    </ul>
+                    <button class="package-select-btn" data-package-id="6gb">Pilih Paket</button>
+                </div>
+
+                <div class="package-card" data-package="7gb">
+                    <div class="package-name">7 GB</div>
+                    <div class="package-price" data-base-price="20000">Rp 20.000</div>
+                    <ul class="package-features">
+                        <li><i class="fas fa-check-circle"></i> 7168 MB RAM</li>
+                        <li><i class="fas fa-check-circle"></i> 7168 MB Disk</li>
+                        <li><i class="fas fa-check-circle"></i> 100% CPU</li>
+                        <li><i class="fas fa-check-circle"></i> Full Access</li>
+                    </ul>
+                    <button class="package-select-btn" data-package-id="7gb">Pilih Paket</button>
+                </div>
+
+                <div class="package-card" data-package="8gb">
+                    <div class="package-name">8 GB</div>
+                    <div class="package-price" data-base-price="22000">Rp 22.000</div>
+                    <ul class="package-features">
+                        <li><i class="fas fa-check-circle"></i> 8192 MB RAM</li>
+                        <li><i class="fas fa-check-circle"></i> 8192 MB Disk</li>
+                        <li><i class="fas fa-check-circle"></i> 100% CPU</li>
+                        <li><i class="fas fa-check-circle"></i> Full Access</li>
+                    </ul>
+                    <button class="package-select-btn" data-package-id="8gb">Pilih Paket</button>
+                </div>
+
+                <div class="package-card" data-package="9gb">
+                    <div class="package-name">9 GB</div>
+                    <div class="package-price" data-base-price="25000">Rp 25.000</div>
+                    <ul class="package-features">
+                        <li><i class="fas fa-check-circle"></i> 9216 MB RAM</li>
+                        <li><i class="fas fa-check-circle"></i> 9216 MB Disk</li>
+                        <li><i class="fas fa-check-circle"></i> 100% CPU</li>
+                        <li><i class="fas fa-check-circle"></i> Full Access</li>
+                    </ul>
+                    <button class="package-select-btn" data-package-id="9gb">Pilih Paket</button>
+                </div>
+
+                <div class="package-card" data-package="10gb">
+                    <div class="package-name">10 GB</div>
+                    <div class="package-price" data-base-price="28000">Rp 28.000</div>
+                    <ul class="package-features">
+                        <li><i class="fas fa-check-circle"></i> 10240 MB RAM</li>
+                        <li><i class="fas fa-check-circle"></i> 10240 MB Disk</li>
+                        <li><i class="fas fa-check-circle"></i> 200% CPU</li>
+                        <li><i class="fas fa-check-circle"></i> Full Access</li>
+                    </ul>
+                    <button class="package-select-btn" data-package-id="10gb">Pilih Paket</button>
+                </div>
+
+                <div class="package-card" data-package="unlimited">
+                    <div class="package-name">Unlimited</div>
+                    <div class="package-price" data-base-price="35000">Rp 35.000</div>
+                    <ul class="package-features">
+                        <li><i class="fas fa-check-circle"></i> Unlimited RAM</li>
+                        <li><i class="fas fa-check-circle"></i> Unlimited Disk</li>
+                        <li><i class="fas fa-check-circle"></i> Unlimited CPU</li>
+                        <li><i class="fas fa-check-circle"></i> Full Access</li>
+                    </ul>
+                    <button class="package-select-btn" data-package-id="unlimited">Pilih Paket</button>
+                </div>
+            </div>
+            <p style="text-align: center; color: var(--placeholder-color); font-size: 0.9em;">
+                Pilih paket di atas untuk melanjutkan ke detail pembayaran dan pembuatan panel.
+            </p>
+        </div>
+
+        <div id="payment-instructions-section" class="store-section">
+            <h2 class="section-title">Instruksi Pembayaran</h2>
+            <p style="text-align: center; margin-bottom: 25px;">
+                Anda memilih paket: <b id="payPackageName"></b> dengan Total Harga: <b id="payPackagePriceWithFee"></b>
+                (<span id="basePriceInfo"></span> + <span id="feeInfo"></span> Fee)
+            </p>
+
+            <div class="payment-info">
+                <h3>Selesaikan Pembayaran Anda</h3>
+                <p>Silakan scan QR code di bawah atau klik link untuk pembayaran:</p>
+                <img id="qrCodeImage" src="" alt="QR Code Pembayaran" class="payment-qr-code" style="display:none;">
+                <p><a id="paymentCheckoutLink" href="#" target="_blank" style="display:none;">Klik di sini untuk melanjutkan pembayaran</a></p>
+                <p id="paymentStatusMessage" style="margin-top: 15px; color: var(--primary-accent);">Menunggu instruksi pembayaran...</p>
+                <p style="font-size: 0.85em; color: var(--placeholder-color); margin-top: 20px;">
+                    Setelah pembayaran berhasil, Anda akan otomatis diarahkan untuk mengisi detail panel.
+                </p>
+                <p style="font-size: 0.8em; color: var(--error-color); margin-top: 5px;">
+                    *Penting: Jangan tutup halaman ini. Status akan otomatis berubah atau cek manual.
+                </p>
+            </div>
+            <div class="payment-actions">
+                <button type="button" id="checkPaymentStatusBtn" class="cyber-button" style="background-image: linear-gradient(90deg, #FFC107 0%, #FF8F00 100%);">
+                    Cek Status Pembayaran
+                </button>
+                <button type="button" id="backFromPayment" class="cyber-button back-button">
+                    Kembali ke Pilihan Paket
+                </button>
+            </div>
+        </div>
+
+        <div id="panel-creation-section" class="store-section">
+            <h2 class="section-title">Detail Panel Anda</h2>
+            <p style="text-align: center; margin-bottom: 25px;">
+                Pembayaran Anda untuk paket: <b id="finalPackageName"></b> berhasil dikonfirmasi.
+                Silakan isi detail panel di bawah.
+            </p>
+
+            <form id="createPanelFormDetail" style="width: 100%; max-width: 400px;">
+                <div class="form-group">
+                    <label for="panelUsername">Username Panel:</label>
+                    <input type="text" id="panelUsername" name="panelUsername" placeholder="Contoh: user_keren2025" class="input-glow-border" required minlength="4" maxlength="16" pattern="^[a-zA-Z0-9_.-]+$" title="Hanya huruf, angka, underscore, titik, atau dash. Minimal 4, Maksimal 16 karakter.">
+                </div>
+
+                <button type="submit" id="finalCreateButton" class="cyber-button">
+                    Buat Panel Sekarang
+                    <span class="loader-dots" id="finalLoadingSpinner">
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                    </span>
+                </button>
+            </form>
+        </div>
+
+
+        <div id="responseMessage" class=""></div>
+
+    </div>
+
+    <div id="toast-notification-container"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- KONFIGURASI PENTING DAN SENSITIF (HARDCODED DI JS) ---
+            // PERINGATAN: MENYIMPAN INFORMASI INI DI CLIENT-SIDE SANGAT TIDAK AMAN.
+            // SIAPAPUN BISA MELIHATNYA DENGAN "VIEW SOURCE" ATAU DEVELOPER TOOLS BROWSER.
+            // API Keys akan terlihat jelas di URL permintaan HTTP.
+            const PTERODACTYL_DOMAIN = "https://kantinpublic.paneldo.biz.id"; // Perhatikan, ini di API ForestAPI sudah ada HTTPS
+            const PTERODACTYL_PTLA = "ptla_gNaW7Gk9y8MX2o7Ex5reIrjr11vojFckxW6Z1Cs7uU9"; 
+            const PTERODACTYL_PTLC = "ptlc_PMY0KbtViCA2FS3RFqRvKpmXE4og1Zkb1mJtf8gRXDm"; 
+            const DEFAULT_EGG_ID = "15";                               
+            const DEFAULT_NEST_ID = "5";                               
+            const DEFAULT_LOCATION_ID = "1";                           
+            const BASE_URL_PTERODACTYL_API = "https://restapi.mat.web.id/api/pterodactyl/create?username=&ram=&disk=&cpu=&eggid=&nestid=&loc=&domain=&ptla=&ptlc=";
+            
+            // --- KONFIGURASI FORESTAPI (SANGAT TIDAK AMAN DI CLIENT-SIDE) ---
+            const FORESTAPI_CREATE_DEPOSIT_URL = "https://m.forestapi.web.id/api/h2h/deposit/create";
+            const FORESTAPI_STATUS_DEPOSIT_URL = "https://m.forestapi.web.id/api/h2h/deposit/status";
+            const FORESTAPI_API_KEY = "sk-smplpay"; // <-- INI SANGAT SENSITIF & HARUS DI BACKEND!
+            const FORESTAPI_FEE_PERCENTAGE = 0.03; // 3% fee (antara 0.02 - 0.04)
+            // --- AKHIR KONFIGURASI SENSITIF ---
+
+            // Harga dan Spec Paket
+            const PACKAGES = {
+                "1gb": { ram: 1024, disk: 1024, cpu: 100, basePrice: 5000, name: "1 GB" },
+                "2gb": { ram: 2048, disk: 2048, cpu: 100, basePrice: 8000, name: "2 GB" },
+                "3gb": { ram: 3072, disk: 3072, cpu: 100, basePrice: 10000, name: "3 GB" },
+                "4gb": { ram: 4096, disk: 4096, cpu: 100, basePrice: 12000, name: "4 GB" },
+                "5gb": { ram: 5120, disk: 5120, cpu: 100, basePrice: 15000, name: "5 GB" },
+                "6gb": { ram: 6144, disk: 6144, cpu: 100, basePrice: 18000, name: "6 GB" },
+                "7gb": { ram: 7168, disk: 7168, cpu: 100, basePrice: 20000, name: "7 GB" },
+                "8gb": { ram: 8192, disk: 8192, cpu: 100, basePrice: 22000, name: "8 GB" },
+                "9gb": { ram: 9216, disk: 9216, cpu: 100, basePrice: 25000, name: "9 GB" },
+                "10gb": { ram: 10240, disk: 10240, cpu: 200, basePrice: 28000, name: "10 GB" },
+                "unlimited": { ram: 0, disk: 0, cpu: 0, basePrice: 35000, name: "Unlimited" }
+            };
+            // --- AKHIR KONFIGURASI ---
+
+
+            const responseMessageDiv = document.getElementById('responseMessage');
+            const toastContainer = document.getElementById('toast-notification-container');
+
+            // Sections
+            const packageSelectionSection = document.getElementById('package-selection-section');
+            const paymentInstructionsSection = document.getElementById('payment-instructions-section');
+            const panelCreationSection = document.getElementById('panel-creation-section');
+
+            // Elements in Package Selection
+            const packageCards = document.querySelectorAll('.package-card');
+            
+            // Elements in Payment Instructions
+            const payPackageNameSpan = document.getElementById('payPackageName');
+            const payPackagePriceWithFeeSpan = document.getElementById('payPackagePriceWithFee'); // Adjusted ID
+            const basePriceInfoSpan = document.getElementById('basePriceInfo'); // New Span
+            const feeInfoSpan = document.getElementById('feeInfo'); // New Span
+            const qrCodeImage = document.getElementById('qrCodeImage');
+            const paymentCheckoutLink = document.getElementById('paymentCheckoutLink');
+            const paymentStatusMessage = document.getElementById('paymentStatusMessage');
+            const backFromPaymentBtn = document.getElementById('backFromPayment');
+            const checkPaymentStatusBtn = document.getElementById('checkPaymentStatusBtn'); 
+
+            // Elements in Panel Creation Form
+            const createPanelFormDetail = document.getElementById('createPanelFormDetail');
+            const finalCreateButton = document.getElementById('finalCreateButton');
+            const finalLoadingSpinner = document.getElementById('finalLoadingSpinner');
+            const panelUsernameInput = document.getElementById('panelUsername');
+            const finalPackageNameSpan = document.getElementById('finalPackageName');
+
+            let currentSelectedPackageId = null; 
+            let currentPaymentRefId = null; // Store payment ref_id from ForestAPI for status check
+
+            // --- Fungsi Utility ---
+            function showMainMessage(type, messageHTML) {
+                responseMessageDiv.className = type; 
+                responseMessageDiv.innerHTML = messageHTML;
+                responseMessageDiv.style.opacity = 0; 
+                responseMessageDiv.style.transform = 'translateY(20px)'; 
+                void responseMessageDiv.offsetWidth; 
+                responseMessageDiv.style.opacity = 1; 
+                responseMessageDiv.style.transform = 'translateY(0)'; 
+            }
+
+            function showToast(type, message, duration = 3000) {
+                const toast = document.createElement('div');
+                toast.classList.add('toast-notification', type); 
+
+                let icon = '';
+                if (type === 'success') icon = '<i class="fas fa-check-circle"></i>';
+                else if (type === 'error') icon = '<i class="fas fa-times-circle"></i>';
+                else if (type === 'info') icon = '<i class="fas fa-info-circle"></i>';
+
+                toast.innerHTML = `
+                    <span class="icon">${icon}</span>
+                    <span class="message">${message}</span>
+                    <button class="close-btn">&times;</button>
+                `;
+
+                toast.querySelector('.close-btn').addEventListener('click', () => {
+                    toast.remove();
+                });
+
+                toastContainer.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.style.animation = 'fadeOut 0.5s ease-in forwards';
+                    toast.addEventListener('animationend', () => {
+                        toast.remove();
+                    });
+                }, duration);
+            }
+
+            // Fungsi untuk mengganti section yang aktif
+            function switchSection(sectionToShow, sectionToHide) {
+                sectionToHide.style.opacity = 0;
+                sectionToHide.style.transform = 'translateY(20px)';
+                sectionToHide.addEventListener('transitionend', function handler() { 
+                    sectionToHide.classList.remove('active');
+                    sectionToShow.classList.add('active');
+                    sectionToShow.style.opacity = 0; 
+                    sectionToShow.style.transform = 'translateY(20px)';
+                    void sectionToShow.offsetWidth; 
+                    sectionToShow.style.opacity = 1;
+                    sectionToShow.style.transform = 'translateY(0)';
+                    sectionToHide.removeEventListener('transitionend', handler);
+                }, { once: true });
+                responseMessageDiv.innerHTML = '';
+                responseMessageDiv.className = '';
+            }
+
+            // Fungsi untuk generate reff_id unik
+            function generateReffId() {
+                const timestamp = Date.now();
+                const randomStr = Math.random().toString(36).substring(2, 8); // Random 6 chars
+                return `hps-${timestamp}-${randomStr}`; // Hosting Panel Store
+            }
+            // --- End Fungsi Utility ---
+
+
+            // --- Core Logic ---
+
+            // Step 1: Handle Package Selection
+            packageCards.forEach(card => {
+                card.addEventListener('click', async () => { 
+                    packageCards.forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    currentSelectedPackageId = card.dataset.package;
+
+                    const pkg = PACKAGES[currentSelectedPackageId];
+                    const basePrice = pkg.basePrice;
+                    const feeAmount = Math.ceil(basePrice * FORESTAPI_FEE_PERCENTAGE); // Bulatkan ke atas
+                    const totalPrice = basePrice + feeAmount;
+
+                    payPackageNameSpan.textContent = pkg.name;
+                    payPackagePriceWithFeeSpan.textContent = `Rp ${totalPrice.toLocaleString('id-ID')}`;
+                    basePriceInfoSpan.textContent = `Harga Dasar: Rp ${basePrice.toLocaleString('id-ID')}`;
+                    feeInfoSpan.textContent = `Fee (${(FORESTAPI_FEE_PERCENTAGE * 100).toFixed(0)}%): Rp ${feeAmount.toLocaleString('id-ID')}`;
+
+
+                    showToast('info', `Membuat permintaan pembayaran untuk paket ${pkg.name}...`);
+                    switchSection(paymentInstructionsSection, packageSelectionSection); 
+
+                    paymentStatusMessage.textContent = 'Menunggu instruksi pembayaran...';
+                    qrCodeImage.style.display = 'none';
+                    paymentCheckoutLink.style.display = 'none';
+                    qrCodeImage.src = '';
+                    paymentCheckoutLink.href = '#';
+                    checkPaymentStatusBtn.disabled = true; 
+
+                    // --- Jeda loading untuk pembuatan pembayaran ---
+                    showToast('info', 'Sedang memproses pembayaran. Mohon tunggu...');
+                    await new Promise(resolve => setTimeout(resolve, 1500)); // Jeda 1.5 detik
+                    // --- Akhir jeda loading ---
+
+                    const currentReffId = generateReffId(); // Generate unik reff_id
+                    const paymentUrl = `${FORESTAPI_CREATE_DEPOSIT_URL}?nominal=${totalPrice}&fee_by_customer=false&method=QRISFAST&reff_id=${currentReffId}&api_key=${FORESTAPI_API_KEY}`;
+                    
+                    try {
+                        const forestApiResponse = await fetch(paymentUrl);
+                        const forestApiData = await forestApiResponse.json();
+
+                        if (forestApiResponse.ok && forestApiData.status) {
+                            currentPaymentRefId = forestApiData.data.ref_id; 
+                            checkPaymentStatusBtn.disabled = false; 
+
+                            if (forestApiData.data.qr_code) {
+                                qrCodeImage.src = forestApiData.data.qr_code;
+                                qrCodeImage.style.display = 'block';
+                                paymentStatusMessage.textContent = 'Scan QR Code di atas atau klik link pembayaran.';
+                            } else if (forestApiData.data.checkout_url) {
+                                paymentCheckoutLink.href = forestApiData.data.checkout_url;
+                                paymentCheckoutLink.style.display = 'block';
+                                paymentStatusMessage.textContent = 'Klik link di sini untuk melanjutkan pembayaran.';
+                            } else {
+                                showToast('error', 'Instruksi pembayaran tidak ditemukan.');
+                                paymentStatusMessage.textContent = 'Gagal mendapatkan instruksi pembayaran. Coba lagi.';
+                            }
+                            showToast('success', 'Instruksi pembayaran berhasil dibuat!');
+
+                        } else {
+                            showToast('error', `Gagal membuat pembayaran: ${forestApiData.message || 'Error tidak diketahui'}`);
+                            paymentStatusMessage.textContent = `Error: ${forestApiData.message || 'Gagal membuat transaksi pembayaran. Coba lagi.'}`;
+                            qrCodeImage.style.display = 'none';
+                            paymentCheckoutLink.style.display = 'none';
+                            checkPaymentStatusBtn.disabled = true; 
+                        }
+                    } catch (error) {
+                        console.error('Error calling ForestAPI for deposit creation:', error);
+                        showToast('error', 'Koneksi ke sistem pembayaran gagal.');
+                        paymentStatusMessage.textContent = `Error: Koneksi ke ForestAPI gagal. ${error.message}`;
+                        qrCodeImage.style.display = 'none';
+                        paymentCheckoutLink.style.display = 'none';
+                        checkPaymentStatusBtn.disabled = true; 
+                    }
+                });
+            });
+
+            // Handle Check Payment Status Button Click
+            checkPaymentStatusBtn.addEventListener('click', async () => {
+                if (!currentPaymentRefId) {
+                    showToast('error', 'Tidak ada pembayaran aktif untuk dicek statusnya.');
+                    return;
+                }
+
+                checkPaymentStatusBtn.textContent = 'Cek Status...';
+                checkPaymentStatusBtn.disabled = true;
+                paymentStatusMessage.textContent = 'Memeriksa status pembayaran...';
+                showToast('info', 'Memeriksa status pembayaran...');
+
+                const statusUrl = `${FORESTAPI_STATUS_DEPOSIT_URL}?id=${currentPaymentRefId}&api_key=${FORESTAPI_API_KEY}`;
+                
+                try {
+                    const statusResponse = await fetch(statusUrl);
+                    const statusData = await statusResponse.json();
+
+                    if (statusResponse.ok && statusData.status) {
+                        const depositStatus = statusData.data.status;
+                        paymentStatusMessage.textContent = `Status Pembayaran: ${depositStatus.toUpperCase()}`;
+                        showToast('info', `Status Pembayaran: ${depositStatus.toUpperCase()}`);
+
+                        if (depositStatus === 'paid') { // JIKA STATUSNYA PAID
+                            showToast('success', 'Pembayaran terverifikasi! Silakan isi detail panel.');
+                            finalPackageNameSpan.textContent = PACKAGES[currentSelectedPackageId].name;
+                            switchSection(panelCreationSection, paymentInstructionsSection);
+                        } else if (depositStatus === 'pending') {
+                            showToast('info', 'Pembayaran masih tertunda. Harap selesaikan pembayaran.');
+                            paymentStatusMessage.textContent += ' (Harap selesaikan pembayaran.)';
+                        } else { // Failed, expired, canceled, etc.
+                            showToast('error', `Pembayaran ${depositStatus}. Harap coba lagi.`);
+                            paymentStatusMessage.textContent += ` (Pembayaran ${depositStatus}. Kembali ke pilihan paket.)`;
+                            setTimeout(() => {
+                                switchSection(packageSelectionSection, paymentInstructionsSection);
+                                currentSelectedPackageId = null;
+                                currentPaymentRefId = null;
+                                packageCards.forEach(c => c.classList.remove('selected'));
+                            }, 3000);
+                        }
+                    } else {
+                        showToast('error', `Gagal cek status: ${statusData.message || 'Error tidak diketahui'}`);
+                        paymentStatusMessage.textContent = `Error cek status: ${statusData.message || 'Gagal mengambil status pembayaran.'}`;
+                    }
+                } catch (error) {
+                    console.error('Error calling ForestAPI for status check:', error);
+                    showToast('error', 'Koneksi ke sistem pembayaran gagal saat cek status.');
+                    paymentStatusMessage.textContent = `Error: Koneksi gagal saat cek status. ${error.message}`;
+                } finally {
+                    checkPaymentStatusBtn.textContent = 'Cek Status Pembayaran';
+                    checkPaymentStatusBtn.disabled = false;
+                }
+            });
+
+
+            // Back from Payment Instructions to Package Selection
+            backFromPaymentBtn.addEventListener('click', () => {
+                switchSection(packageSelectionSection, paymentInstructionsSection);
+                currentSelectedPackageId = null;
+                currentPaymentRefId = null;
+                packageCards.forEach(c => c.classList.remove('selected'));
+            });
+
+
+            // Step 3: Handle Panel Creation Form Submission (after payment)
+            createPanelFormDetail.addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                finalCreateButton.textContent = 'Membuat Panel...'; 
+                finalCreateButton.disabled = true;
+                finalLoadingSpinner.style.display = 'flex'; 
+                responseMessageDiv.innerHTML = ''; 
+                responseMessageDiv.className = ''; 
+
+                const panelUsername = panelUsernameInput.value;
+                
+                if (!panelUsername) {
+                    showToast('error', 'Username panel harus diisi!');
+                    finalCreateButton.textContent = 'Buat Panel Sekarang';
+                    finalCreateButton.disabled = false;
+                    finalLoadingSpinner.style.display = 'none';
+                    return;
+                }
+
+                if (!panelUsernameInput.checkValidity()) {
+                    showToast('error', `Username panel tidak valid: ${panelUsernameInput.title}`);
+                    finalCreateButton.textContent = 'Buat Panel Sekarang';
+                    finalCreateButton.disabled = false;
+                    finalLoadingSpinner.style.display = 'none';
+                    return;
+                }
+
+                // Ambil detail paket yang dipilih dari global state
+                const selectedPkg = PACKAGES[currentSelectedPackageId];
+                let ram = selectedPkg.ram;
+                let disk = selectedPkg.disk;
+                let cpu = selectedPkg.cpu;
+
+                const eggid = DEFAULT_EGG_ID;
+                const nestid = DEFAULT_NEST_ID;
+                const loc = DEFAULT_LOCATION_ID;
+                
+                // --- PENTING: Pengisian placeholder di URL template ---
+                const finalUrl = BASE_URL_PTERODACTYL_API
+                    .replace('username=', `username=${encodeURIComponent(panelUsername)}`)
+                    .replace('ram=', `ram=${ram}`) 
+                    .replace('disk=', `disk=${disk}`)
+                    .replace('cpu=', `cpu=${cpu}`)
+                    .replace('eggid=', `eggid=${eggid}`)
+                    .replace('nestid=', `nestid=${nestid}`)
+                    .replace('loc=', `loc=${loc}`)
+                    .replace('domain=', `domain=${encodeURIComponent(PTERODACTYL_DOMAIN)}`) 
+                    .replace('ptla=', `ptla=${PTERODACTYL_PTLA}`)
+                    .replace('ptlc=', `ptlc=${PTERODACTYL_PTLC}`);
+
+                try {
+                    const response = await fetch(finalUrl, { method: 'GET' });
+                    const data = await response.json();
+
+                    if (response.ok && data.status) {
+                        const result = data.result;
+                        const panelDomainUrl = result.domain; 
+
+                        const fullTextToCopy = `
+==============================
+   DETAIL AKUN PANEL ANDA   
+==============================
+Username: ${result.username}
+Password: ${result.password}
+Paket: ${selectedPkg.name}
+ID User: ${result.id_user}
+Server ID: ${result.id_server}
+Domain: ${panelDomainUrl}
+==============================
+`;
+
+                        const successMessageHTML = `
+                            <div class="result-title">Panel Berhasil Dibuat!</div>
+                            <div class="result-row"><span>Username:</span> <span id="copyUsernameValue">${result.username}</span></div>
+                            <div class="result-row"><span>Password:</span> <span id="copyPasswordValue">${result.password}</span></div>
+                            <div class="result-row"><span>Paket:</span> <span>${selectedPkg.name}</span></div>
+                            <div class="result-row"><span>ID User:</span> <span>${result.id_user}</span></div>
+                            <div class="result-row"><span>Server ID:</span> <span>${result.id_server}</span></div>
+                            <div class="result-row"><span>Domain:</span> <span id="copyDomainValue"><a href="${panelDomainUrl}" target="_blank">${result.domain}</a></span></div>
+                            
+                            <div class="result-actions">
+                                <button class="copy-button" data-copy-target="copyUsernameValue">Copy Username</button>
+                                <button class="copy-button" data-copy-target="copyPasswordValue">Copy Password</button>
+                                <button class="copy-button" data-copy-target="copyDomainValue">Copy Domain</button>
+                                <button class="login-panel-button" onclick="window.open('${panelDomainUrl}', '_blank')">Login Panel</button>
+                                <button class="copy-all-button" data-copy-value="${fullTextToCopy.trim()}">Copy All Details</button>
+                            </div>
+                            <p class="contact-message">
+                                Jika tidak bisa login, silakan hubungi <a href="#">Admin</a>
+                            </p>
+                        `;
+                        showMainMessage('success', successMessageHTML); 
+                        createPanelFormDetail.reset(); 
+                        showToast('success', 'Panel berhasil dibuat!'); 
+                        // Hide the panel creation section after success
+                        panelCreationSection.style.display = 'none';
+
+                    } else {
+                        const errorMessage = data.message || (data.errors && data.errors[0] ? data.errors[0].detail : 'Terjadi kesalahan yang tidak diketahui.');
+                        showMainMessage('error', `<b>Gagal membuat server!</b><br>Pesan: ${errorMessage}`); 
+                        showToast('error', 'Gagal membuat panel!'); 
+                    }
+                } catch (error) {
+                    console.error('Error saat menghubungi API Pterodactyl:', error);
+                    showMainMessage('error', `Terjadi kesalahan jaringan atau server tidak merespons: ${error.message}.<br>Jika ini terjadi terus, kemungkinan besar masalah CORS dari server restapi.mat.web.id.`); 
+                    showToast('error', 'Kesalahan koneksi API Pterodactyl!'); 
+                } finally {
+                    finalCreateButton.textContent = 'Buat Panel Sekarang';
+                    finalCreateButton.disabled = false;
+                    finalLoadingSpinner.style.display = 'none'; 
+                }
+            });
+
+            // Universal Copy Functionality (using event delegation on document)
+            document.addEventListener('click', async (event) => {
+                if (event.target.classList.contains('copy-button')) {
+                    const targetId = event.target.dataset.copyTarget;
+                    const textToCopy = document.getElementById(targetId).textContent;
+                    
+                    if (textToCopy) {
+                        try {
+                            await navigator.clipboard.writeText(textToCopy);
+                            showToast('info', `Disalin: ${textToCopy.substring(0, Math.min(25, textToCopy.length))}...`); 
+                            event.target.textContent = 'Copied!';
+                            setTimeout(() => {
+                                if (targetId === 'copyUsernameValue') event.target.textContent = 'Copy Username';
+                                else if (targetId === 'copyPasswordValue') event.target.textContent = 'Copy Password';
+                                else if (targetId === 'copyDomainValue') event.target.textContent = 'Copy Domain';
+                            }, 1500);
+                        } catch (err) {
+                            console.error('Failed to copy text:', err);
+                            showToast('error', 'Gagal menyalin!');
+                        }
+                    }
+                } else if (event.target.classList.contains('copy-all-button')) { 
+                    const textToCopy = event.target.dataset.copyValue;
+                     if (textToCopy) {
+                        try {
+                            await navigator.clipboard.writeText(textToCopy);
+                            showToast('info', 'Semua detail berhasil disalin!'); 
+                            event.target.textContent = 'All Copied!';
+                            setTimeout(() => {
+                                event.target.textContent = 'Copy All Details';
+                            }, 1500);
+                        } catch (err) {
+                            console.error('Failed to copy all text:', err);
+                            showToast('error', 'Gagal menyalin semua!');
+                        }
+                    }
+                } else if (event.target.classList.contains('copy-small-button')) { // For small payment detail copy buttons
+                    const targetId = event.target.dataset.copyTarget;
+                    const textToCopy = document.getElementById(targetId).textContent;
+                    if (textToCopy) {
+                        try {
+                            await navigator.clipboard.writeText(textToCopy);
+                            event.target.textContent = 'Disalin!';
+                            setTimeout(() => {
+                                event.target.textContent = 'Copy';
+                            }, 1000);
+                            showToast('info', `Disalin: ${textToCopy}`);
+                        } catch (err) {
+                            console.error('Failed to copy small text:', err);
+                            showToast('error', 'Gagal menyalin!');
+                        }
+                    }
+                }
+            });
+
+            // Initial view
+            switchSection(packageSelectionSection, paymentInstructionsSection); // Hide payment instructions
+            switchSection(packageSelectionSection, panelCreationSection); // Hide panel creation
+        });
+    </script>
+</body>
+</html>
