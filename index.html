@@ -34,8 +34,10 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            /* Allow scrolling on body if content overflows, especially on mobile */
             min-height: 100vh;
-            overflow: hidden; /* Hide overflow from particle effect or similar */
+            overflow-y: auto; 
+            overflow-x: hidden; /* Hide horizontal overflow */
             position: relative;
         }
 
@@ -47,7 +49,7 @@
             width: 100%;
             height: 100%;
             pointer-events: none;
-            overflow: hidden;
+            overflow: hidden; /* Keep overflow hidden for particles only */
             z-index: 0;
         }
         .particle {
@@ -79,7 +81,7 @@
             border: 1px solid var(--border-color);
             width: 100%;
             max-width: 900px; /* Wider for store layout */
-            min-height: 500px; /* Ensure some height */
+            /* min-height: 500px; Remove fixed min-height, let content dictate */
             box-sizing: border-box;
             position: relative;
             z-index: 10;
@@ -89,6 +91,7 @@
             display: flex;
             flex-direction: column;
             align-items: center; /* Center content horizontally */
+            margin: 20px auto; /* Add vertical margin to container to allow body scroll */
         }
         @keyframes containerEntry {
             to { opacity: 1; transform: translateY(0) scale(1); }
@@ -139,7 +142,28 @@
             gap: 25px;
             width: 100%;
             margin-bottom: 40px;
+            /* Allow scrolling for package grid if needed */
+            overflow-y: auto; 
+            max-height: 55vh; /* Limit height of the grid to allow scrolling inside container */
+            padding-right: 10px; /* Space for scrollbar */
         }
+
+        /* Customize scrollbar for dark theme */
+        .package-grid::-webkit-scrollbar {
+            width: 8px;
+        }
+        .package-grid::-webkit-scrollbar-track {
+            background: var(--input-bg);
+            border-radius: 4px;
+        }
+        .package-grid::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+        .package-grid::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-accent);
+        }
+
 
         .package-card {
             background-color: var(--input-bg); /* Darker card background */
@@ -993,6 +1017,17 @@
                 const randomStr = Math.random().toString(36).substring(2, 8); // Random 6 chars
                 return `hps-${timestamp}-${randomStr}`; // Hosting Panel Store
             }
+
+            // Fungsi untuk format tanggal expired
+            function formatExpiryDate(isoString) {
+                if (!isoString) return 'Tidak diketahui';
+                const date = new Date(isoString);
+                // Menyesuaikan dengan zona waktu lokal dan format Indonesia
+                return date.toLocaleString('id-ID', { 
+                    year: 'numeric', month: 'long', day: 'numeric', 
+                    hour: '2-digit', minute: '2-digit', second: '2-digit' 
+                });
+            }
             // --- End Fungsi Utility ---
 
 
@@ -1038,12 +1073,12 @@
                         const forestApiResponse = await fetch(paymentUrl);
                         const forestApiData = await forestApiResponse.json();
 
-                        if (forestApiResponse.ok && forestApiData.status) {
-                            currentPaymentRefId = forestApiData.data.ref_id; 
+                        if (forestApiResponse.ok && forestApiData.status === 'success') { // Check for "success" status from ForestAPI root
+                            currentPaymentRefId = forestApiData.data.id; // Corrected: Use data.id as ref_id for status check
                             checkPaymentStatusBtn.disabled = false; 
 
-                            if (forestApiData.data.qr_code) {
-                                qrCodeImage.src = forestApiData.data.qr_code;
+                            if (forestApiData.data.qr_image_url) { // Use qr_image_url
+                                qrCodeImage.src = forestApiData.data.qr_image_url;
                                 qrCodeImage.style.display = 'block';
                                 paymentStatusMessage.textContent = 'Scan QR Code di atas atau klik link pembayaran.';
                             } else if (forestApiData.data.checkout_url) {
@@ -1051,25 +1086,29 @@
                                 paymentCheckoutLink.style.display = 'block';
                                 paymentStatusMessage.textContent = 'Klik link di sini untuk melanjutkan pembayaran.';
                             } else {
-                                showToast('error', 'Instruksi pembayaran tidak ditemukan.');
+                                // Fallback if neither QR nor checkout_url is provided
+                                showToast('error', 'Instruksi pembayaran tidak ditemukan (QR/Link tidak ada).');
                                 paymentStatusMessage.textContent = 'Gagal mendapatkan instruksi pembayaran. Coba lagi.';
                             }
+                            paymentStatusMessage.textContent += `\nKedaluwarsa: ${formatExpiryDate(forestApiData.data.expired_at)}`;
                             showToast('success', 'Instruksi pembayaran berhasil dibuat!');
 
                         } else {
+                            // API responded with an error or status is not 'success'
                             showToast('error', `Gagal membuat pembayaran: ${forestApiData.message || 'Error tidak diketahui'}`);
                             paymentStatusMessage.textContent = `Error: ${forestApiData.message || 'Gagal membuat transaksi pembayaran. Coba lagi.'}`;
                             qrCodeImage.style.display = 'none';
                             paymentCheckoutLink.style.display = 'none';
-                            checkPaymentStatusBtn.disabled = true; 
+                            checkPaymentStatusBtn.disabled = true; // Keep disabled on error
                         }
                     } catch (error) {
+                        // Network error or other fetch-related issue
                         console.error('Error calling ForestAPI for deposit creation:', error);
                         showToast('error', 'Koneksi ke sistem pembayaran gagal.');
                         paymentStatusMessage.textContent = `Error: Koneksi ke ForestAPI gagal. ${error.message}`;
                         qrCodeImage.style.display = 'none';
                         paymentCheckoutLink.style.display = 'none';
-                        checkPaymentStatusBtn.disabled = true; 
+                        checkPaymentStatusBtn.disabled = true; // Keep disabled on error
                     }
                 });
             });
@@ -1092,19 +1131,24 @@
                     const statusResponse = await fetch(statusUrl);
                     const statusData = await statusResponse.json();
 
-                    if (statusResponse.ok && statusData.status) {
-                        const depositStatus = statusData.data.status;
+                    if (statusResponse.ok && statusData.status === 'success') { // Check root status
+                        const depositStatus = statusData.data.status; // Get status from data object
                         paymentStatusMessage.textContent = `Status Pembayaran: ${depositStatus.toUpperCase()}`;
                         showToast('info', `Status Pembayaran: ${depositStatus.toUpperCase()}`);
 
-                        if (depositStatus === 'paid') { // JIKA STATUSNYA PAID
+                        if (depositStatus === 'paid') { // Assuming 'paid' is the final success status
                             showToast('success', 'Pembayaran terverifikasi! Silakan isi detail panel.');
                             finalPackageNameSpan.textContent = PACKAGES[currentSelectedPackageId].name;
                             switchSection(panelCreationSection, paymentInstructionsSection);
                         } else if (depositStatus === 'pending') {
                             showToast('info', 'Pembayaran masih tertunda. Harap selesaikan pembayaran.');
                             paymentStatusMessage.textContent += ' (Harap selesaikan pembayaran.)';
-                        } else { // Failed, expired, canceled, etc.
+                        } else if (depositStatus === 'success') { // If "success" in data.status means paid
+                             showToast('success', 'Pembayaran terverifikasi! Silakan isi detail panel.');
+                            finalPackageNameSpan.textContent = PACKAGES[currentSelectedPackageId].name;
+                            switchSection(panelCreationSection, paymentInstructionsSection);
+                        }
+                        else { // Failed, expired, canceled, etc.
                             showToast('error', `Pembayaran ${depositStatus}. Harap coba lagi.`);
                             paymentStatusMessage.textContent += ` (Pembayaran ${depositStatus}. Kembali ke pilihan paket.)`;
                             setTimeout(() => {
@@ -1115,6 +1159,7 @@
                             }, 3000);
                         }
                     } else {
+                        // API call itself failed or returned a non-success root status
                         showToast('error', `Gagal cek status: ${statusData.message || 'Error tidak diketahui'}`);
                         paymentStatusMessage.textContent = `Error cek status: ${statusData.message || 'Gagal mengambil status pembayaran.'}`;
                     }
